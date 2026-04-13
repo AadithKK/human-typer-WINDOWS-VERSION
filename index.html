@@ -21,20 +21,14 @@
     }
 
     html { scroll-behavior: smooth; }
-
     body {
-      background: var(--bg);
-      color: var(--text);
+      background: var(--bg); color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
-      line-height: 1.6;
-      overflow-x: hidden;
+      line-height: 1.6; overflow-x: hidden;
     }
-
     body::before {
-      content: "";
-      position: fixed; inset: 0;
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .4;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 0; opacity: .4;
     }
 
     /* ── NAV ─────────────────────────────────────────────────── */
@@ -42,321 +36,168 @@
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 40px; height: 64px;
-      background: rgba(20,20,20,0.75);
-      backdrop-filter: blur(20px);
+      background: rgba(20,20,20,0.8); backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
     }
-    .nav-brand {
-      display: flex; align-items: center; gap: 10px;
-      text-decoration: none; color: var(--text);
-      font-size: 17px; font-weight: 600; letter-spacing: -.3px;
-    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-size: 17px; font-weight: 600; letter-spacing: -.3px; }
     .nav-brand img { width: 30px; height: 30px; border-radius: 7px; }
-    .nav-download {
-      background: var(--teal); color: #0b1a1f;
-      text-decoration: none; font-size: 13px; font-weight: 700;
-      padding: 8px 20px; border-radius: 8px;
-      transition: opacity .2s, box-shadow .2s;
-    }
+    .nav-links { display: flex; align-items: center; gap: 28px; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-download { background: var(--teal); color: #0b1a1f; text-decoration: none; font-size: 13px; font-weight: 700; padding: 8px 20px; border-radius: 8px; transition: opacity .2s, box-shadow .2s; }
     .nav-download:hover { opacity: .88; box-shadow: 0 0 18px var(--teal-glow); }
+    @media (max-width: 600px) { .nav-links { display: none; } }
 
     /* ── HERO ────────────────────────────────────────────────── */
     .hero {
       position: relative; z-index: 1;
-      min-height: 100vh;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center;
-      padding: 120px 24px 80px;
-      overflow: hidden;
+      display: grid; grid-template-columns: 1fr 1fr;
+      align-items: center; gap: 64px;
+      max-width: 1100px; margin: 0 auto;
+      padding: 140px 40px 96px;
     }
-    .hero::after {
-      content: "";
-      position: absolute;
-      width: 700px; height: 700px;
-      background: radial-gradient(circle, rgba(45,212,232,.13) 0%, transparent 70%);
-      top: 50%; left: 50%;
-      transform: translate(-50%, -60%);
-      animation: pulse 6s ease-in-out infinite;
-      pointer-events: none;
-    }
-    @keyframes pulse {
-      0%,100% { transform: translate(-50%,-60%) scale(1); opacity: 1; }
-      50%      { transform: translate(-50%,-60%) scale(1.12); opacity: .7; }
-    }
-    .hero-logo {
-      width: 88px; height: 88px; border-radius: 20px;
-      margin-bottom: 32px;
-      box-shadow: 0 0 0 1px var(--border), 0 0 40px var(--teal-dim);
-      animation: float 4s ease-in-out infinite;
-      position: relative; z-index: 1;
-    }
-    @keyframes float {
-      0%,100% { transform: translateY(0); }
-      50%      { transform: translateY(-8px); }
-    }
-    .hero h1 {
-      font-size: clamp(42px, 7vw, 80px);
-      font-weight: 800; letter-spacing: -2px; line-height: 1.05;
-      margin-bottom: 20px; position: relative; z-index: 1;
-    }
-    .hero h1 span {
-      background: linear-gradient(135deg, #2dd4e8, #7bf0fa);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .hero-sub {
-      font-size: clamp(16px, 2vw, 20px);
-      color: var(--muted); max-width: 560px;
-      margin-bottom: 40px; line-height: 1.7;
-      position: relative; z-index: 1;
-    }
-    .hero-btns {
-      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
-      position: relative; z-index: 1;
-    }
-    .btn-primary {
-      background: var(--teal); color: #0b1a1f;
-      text-decoration: none; font-size: 15px; font-weight: 700;
-      padding: 14px 32px; border-radius: 10px;
-      transition: opacity .2s, box-shadow .2s, transform .2s;
-      box-shadow: 0 4px 24px var(--teal-glow);
-    }
-    .btn-primary:hover { opacity: .88; transform: translateY(-2px); box-shadow: 0 8px 32px var(--teal-glow); }
-    .btn-secondary {
-      background: transparent; color: var(--text);
-      text-decoration: none; font-size: 15px; font-weight: 600;
-      padding: 14px 32px; border-radius: 10px;
-      border: 1px solid var(--border);
-      transition: border-color .2s, background .2s, transform .2s;
-    }
-    .btn-secondary:hover { border-color: var(--teal); background: var(--teal-dim); transform: translateY(-2px); }
-    .hero-note { margin-top: 20px; font-size: 12px; color: var(--muted); position: relative; z-index: 1; }
+    @media (max-width: 860px) { .hero { grid-template-columns: 1fr; text-align: center; padding: 120px 24px 72px; } }
 
-    /* ── LIVE DEMO ────────────────────────────────────────────── */
+    .hero-glow {
+      position: absolute; width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(45,212,232,.11) 0%, transparent 70%);
+      top: 40%; right: -100px; pointer-events: none;
+      animation: pulse 7s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.1);opacity:.6} }
+
+    .hero-left { position: relative; z-index: 1; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 600; letter-spacing: .5px;
+      color: var(--teal); background: var(--teal-dim);
+      border: 1px solid rgba(45,212,232,.25); border-radius: 99px;
+      padding: 5px 14px; margin-bottom: 24px;
+    }
+    .hero-eyebrow::before { content:""; width:6px; height:6px; border-radius:50%; background:var(--teal); animation: ping .2s ease-in-out; }
+    .hero h1 { font-size: clamp(38px, 5.5vw, 68px); font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 20px; }
+    .hero h1 em { font-style: normal; background: linear-gradient(135deg, #2dd4e8, #7bf0fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-sub { font-size: 17px; color: var(--muted); line-height: 1.75; margin-bottom: 36px; max-width: 440px; }
+    @media (max-width: 860px) { .hero-sub { margin: 0 auto 36px; } }
+
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+    @media (max-width: 860px) { .hero-btns { justify-content: center; } }
+
+    .btn-primary { background: var(--teal); color: #0b1a1f; text-decoration: none; font-size: 15px; font-weight: 700; padding: 14px 32px; border-radius: 10px; transition: opacity .2s, box-shadow .2s, transform .2s; box-shadow: 0 4px 24px var(--teal-glow); }
+    .btn-primary:hover { opacity: .88; transform: translateY(-2px); box-shadow: 0 8px 32px var(--teal-glow); }
+    .btn-secondary { background: transparent; color: var(--text); text-decoration: none; font-size: 15px; font-weight: 600; padding: 14px 32px; border-radius: 10px; border: 1px solid var(--border); transition: border-color .2s, background .2s, transform .2s; }
+    .btn-secondary:hover { border-color: var(--teal); background: var(--teal-dim); transform: translateY(-2px); }
+
+    .hero-note { margin-top: 16px; font-size: 12px; color: var(--muted); }
+
+    /* ── DEMO WINDOW ─────────────────────────────────────────── */
     .demo-window {
       position: relative; z-index: 1;
-      margin-top: 56px;
-      width: 100%; max-width: 600px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 24px 64px rgba(0,0,0,.5), 0 0 0 1px var(--border);
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,.55), 0 0 0 1px var(--border);
+      animation: float 5s ease-in-out infinite;
     }
-    .demo-titlebar {
-      display: flex; align-items: center; gap: 7px;
-      padding: 12px 16px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-    }
-    .demo-dot {
-      width: 12px; height: 12px; border-radius: 50%;
-    }
-    .demo-dot.red    { background: #ff5f57; }
-    .demo-dot.yellow { background: #febc2e; }
-    .demo-dot.green  { background: #28c840; }
-    .demo-title {
-      margin-left: 8px; font-size: 12px; color: var(--muted);
-      font-weight: 500; flex: 1; text-align: center; margin-right: 52px;
-    }
-    .demo-body {
-      padding: 20px 22px 22px;
-      min-height: 90px;
-      font-family: "SF Mono", "Fira Code", monospace;
-      font-size: 14px; color: var(--text); line-height: 1.7;
-      text-align: left;
-    }
-    .demo-cursor {
-      display: inline-block; width: 2px; height: 1.1em;
-      background: var(--teal); vertical-align: text-bottom;
-      animation: blink 1s step-end infinite;
-      margin-left: 1px;
-    }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .demo-titlebar { display: flex; align-items: center; gap: 7px; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .demo-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .demo-dot.red { background:#ff5f57; } .demo-dot.yellow { background:#febc2e; } .demo-dot.green { background:#28c840; }
+    .demo-wintitle { margin-left: 8px; font-size: 12px; color: var(--muted); font-weight: 500; flex: 1; text-align: center; margin-right: 52px; }
+    .demo-meta { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--border); }
+    .demo-tag { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--teal); background: var(--teal-dim); border: 1px solid rgba(45,212,232,.2); padding: 2px 8px; border-radius: 4px; }
+    .demo-wpm { font-size: 11px; color: var(--muted); font-family: "SF Mono", monospace; }
+    .demo-body { padding: 18px 20px 20px; min-height: 96px; font-family: "SF Mono", "Fira Code", monospace; font-size: 13.5px; color: var(--text); line-height: 1.7; }
+    .demo-cursor { display: inline-block; width: 2px; height: 1.1em; background: var(--teal); vertical-align: text-bottom; animation: blink 1s step-end infinite; margin-left: 1px; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .demo-footer { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-top: 1px solid var(--border); background: var(--surface); }
+    .demo-progress-bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .demo-progress-fill { height: 100%; background: var(--teal); border-radius: 2px; transition: width .1s linear; width: 0%; }
+    .demo-status { font-size: 10px; color: var(--muted); font-family: "SF Mono", monospace; white-space: nowrap; }
 
     /* ── STATS BAR ───────────────────────────────────────────── */
-    .stats-bar {
-      position: relative; z-index: 1;
-      display: flex; justify-content: center;
-      flex-wrap: wrap; gap: 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-    }
-    .stat-item {
-      flex: 1; min-width: 160px;
-      padding: 32px 24px; text-align: center;
-      border-right: 1px solid var(--border);
-    }
+    .stats-bar { position: relative; z-index: 1; display: flex; justify-content: center; flex-wrap: wrap; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); }
+    .stat-item { flex: 1; min-width: 140px; padding: 28px 24px; text-align: center; border-right: 1px solid var(--border); }
     .stat-item:last-child { border-right: none; }
-    .stat-num {
-      font-size: 40px; font-weight: 800; letter-spacing: -1.5px;
-      color: var(--teal); display: block; line-height: 1;
-      margin-bottom: 6px;
-    }
-    .stat-label { font-size: 13px; color: var(--muted); }
+    .stat-num { font-size: 36px; font-weight: 800; letter-spacing: -1.5px; color: var(--teal); display: block; line-height: 1; margin-bottom: 5px; }
+    .stat-label { font-size: 12px; color: var(--muted); }
 
     /* ── SCROLL REVEAL ───────────────────────────────────────── */
-    .reveal {
-      opacity: 0;
-      transform: translateY(28px);
-      transition: opacity .55s ease, transform .55s ease;
-    }
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .55s ease, transform .55s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-stagger > * { opacity: 0; transform: translateY(24px); transition: opacity .45s ease, transform .45s ease; }
+    .reveal-stagger.visible > *:nth-child(1)  { opacity:1;transform:none;transition-delay:.05s }
+    .reveal-stagger.visible > *:nth-child(2)  { opacity:1;transform:none;transition-delay:.10s }
+    .reveal-stagger.visible > *:nth-child(3)  { opacity:1;transform:none;transition-delay:.15s }
+    .reveal-stagger.visible > *:nth-child(4)  { opacity:1;transform:none;transition-delay:.20s }
+    .reveal-stagger.visible > *:nth-child(5)  { opacity:1;transform:none;transition-delay:.25s }
+    .reveal-stagger.visible > *:nth-child(6)  { opacity:1;transform:none;transition-delay:.30s }
+    .reveal-stagger.visible > *:nth-child(7)  { opacity:1;transform:none;transition-delay:.35s }
+    .reveal-stagger.visible > *:nth-child(8)  { opacity:1;transform:none;transition-delay:.40s }
+    .reveal-stagger.visible > *:nth-child(9)  { opacity:1;transform:none;transition-delay:.45s }
+    .reveal-stagger.visible > *:nth-child(10) { opacity:1;transform:none;transition-delay:.50s }
+    .reveal-stagger.visible > *:nth-child(11) { opacity:1;transform:none;transition-delay:.55s }
+    .reveal-stagger.visible > *:nth-child(12) { opacity:1;transform:none;transition-delay:.60s }
 
-    /* stagger children */
-    .reveal-stagger > * {
-      opacity: 0;
-      transform: translateY(24px);
-      transition: opacity .45s ease, transform .45s ease;
-    }
-    .reveal-stagger.visible > *:nth-child(1)  { opacity:1; transform:none; transition-delay: .05s; }
-    .reveal-stagger.visible > *:nth-child(2)  { opacity:1; transform:none; transition-delay: .10s; }
-    .reveal-stagger.visible > *:nth-child(3)  { opacity:1; transform:none; transition-delay: .15s; }
-    .reveal-stagger.visible > *:nth-child(4)  { opacity:1; transform:none; transition-delay: .20s; }
-    .reveal-stagger.visible > *:nth-child(5)  { opacity:1; transform:none; transition-delay: .25s; }
-    .reveal-stagger.visible > *:nth-child(6)  { opacity:1; transform:none; transition-delay: .30s; }
-    .reveal-stagger.visible > *:nth-child(7)  { opacity:1; transform:none; transition-delay: .35s; }
-    .reveal-stagger.visible > *:nth-child(8)  { opacity:1; transform:none; transition-delay: .40s; }
-    .reveal-stagger.visible > *:nth-child(9)  { opacity:1; transform:none; transition-delay: .45s; }
-    .reveal-stagger.visible > *:nth-child(10) { opacity:1; transform:none; transition-delay: .50s; }
-    .reveal-stagger.visible > *:nth-child(11) { opacity:1; transform:none; transition-delay: .55s; }
-    .reveal-stagger.visible > *:nth-child(12) { opacity:1; transform:none; transition-delay: .60s; }
+    /* ── SECTIONS ────────────────────────────────────────────── */
+    section { position: relative; z-index: 1; padding: 96px 40px; max-width: 1100px; margin: 0 auto; }
+    @media (max-width: 700px) { section { padding: 72px 24px; } }
+    .section-tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--teal); background: var(--teal-dim); border: 1px solid rgba(45,212,232,.2); padding: 4px 12px; border-radius: 99px; margin-bottom: 16px; }
+    .section-title { font-size: clamp(28px, 4vw, 44px); font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
+    .section-desc { font-size: 16px; color: var(--muted); max-width: 520px; margin-bottom: 52px; }
 
-    /* ── SECTION WRAPPER ─────────────────────────────────────── */
-    section {
-      position: relative; z-index: 1;
-      padding: 96px 24px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .section-tag {
-      display: inline-block;
-      font-size: 11px; font-weight: 700; letter-spacing: 1.4px;
-      text-transform: uppercase; color: var(--teal);
-      background: var(--teal-dim); border: 1px solid rgba(45,212,232,.2);
-      padding: 4px 12px; border-radius: 99px;
-      margin-bottom: 16px;
-    }
-    .section-title {
-      font-size: clamp(28px, 4vw, 44px);
-      font-weight: 800; letter-spacing: -1px;
-      margin-bottom: 12px;
-    }
-    .section-desc {
-      font-size: 16px; color: var(--muted);
-      max-width: 520px; margin-bottom: 56px;
-    }
-
-    /* ── FEATURES GRID ───────────────────────────────────────── */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 16px;
-    }
-    .feature-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
-      transition: border-color .25s, transform .25s, box-shadow .25s;
-    }
-    .feature-card:hover {
-      border-color: rgba(45,212,232,.35);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 32px rgba(0,0,0,.35);
-    }
+    /* ── FEATURES ────────────────────────────────────────────── */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .feature-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; transition: border-color .25s, transform .25s, box-shadow .25s; }
+    .feature-card:hover { border-color: rgba(45,212,232,.35); transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,.35); }
     .feature-icon { font-size: 28px; margin-bottom: 14px; display: block; }
     .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .feature-card p  { font-size: 13.5px; color: var(--muted); line-height: 1.65; }
+    .feature-card p { font-size: 13.5px; color: var(--muted); line-height: 1.65; }
 
     /* ── DIVIDER ─────────────────────────────────────────────── */
-    .divider { border: none; border-top: 1px solid var(--border); margin: 0 24px; }
+    .divider { border: none; border-top: 1px solid var(--border); }
 
-    /* ── INSTALL ─────────────────────────────────────────────── */
-    .install-steps { display: flex; flex-direction: column; gap: 16px; max-width: 640px; }
-    .step { display: flex; gap: 18px; align-items: flex-start; }
-    .step-num {
-      min-width: 32px; height: 32px;
-      background: var(--teal-dim); border: 1px solid rgba(45,212,232,.3);
-      color: var(--teal); font-size: 13px; font-weight: 700;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      margin-top: 2px;
-    }
-    .step-body h4 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+    /* ── HOW IT WORKS (two-col) ──────────────────────────────── */
+    .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    @media (max-width: 760px) { .how-grid { grid-template-columns: 1fr; } }
+    .how-steps { display: flex; flex-direction: column; gap: 20px; }
+    .how-step { display: flex; gap: 16px; align-items: flex-start; }
+    .how-num { min-width: 32px; height: 32px; background: var(--teal-dim); border: 1px solid rgba(45,212,232,.3); color: var(--teal); font-size: 13px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+    .how-step h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .how-step p { font-size: 13px; color: var(--muted); }
 
-    /* ── CODE BLOCK + COPY ───────────────────────────────────── */
+    /* ── CODE ────────────────────────────────────────────────── */
     .code-wrap { position: relative; }
-    .code-block {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 52px 14px 18px;
-      font-family: "SF Mono", "Fira Code", "Courier New", monospace;
-      font-size: 13px; color: #c8eaf0;
-      overflow-x: auto; white-space: pre;
-    }
-    .copy-btn {
-      position: absolute; top: 50%; right: 10px;
-      transform: translateY(-50%);
-      background: var(--border); border: none; border-radius: 6px;
-      color: var(--muted); font-size: 11px; font-weight: 600;
-      padding: 4px 10px; cursor: pointer;
-      transition: background .15s, color .15s;
-    }
+    .code-block { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 52px 14px 18px; font-family: "SF Mono", "Fira Code", "Courier New", monospace; font-size: 13px; color: #c8eaf0; overflow-x: auto; white-space: pre; }
+    .copy-btn { position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: var(--border); border: none; border-radius: 6px; color: var(--muted); font-size: 11px; font-weight: 600; padding: 4px 10px; cursor: pointer; transition: background .15s, color .15s; }
     .copy-btn:hover { background: var(--teal-dim); color: var(--teal); }
     .copy-btn.copied { color: var(--teal); background: var(--teal-dim); }
+    .code-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .code-stack { display: flex; flex-direction: column; gap: 14px; }
 
     /* ── CLAUDE SECTION ──────────────────────────────────────── */
-    .claude-card {
-      background: linear-gradient(135deg, var(--card) 0%, #1a2a2c 100%);
-      border: 1px solid rgba(45,212,232,.2);
-      border-radius: 20px;
-      padding: 48px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 48px;
-      align-items: center;
-    }
+    .claude-card { background: linear-gradient(135deg, var(--card) 0%, #1a2a2c 100%); border: 1px solid rgba(45,212,232,.2); border-radius: 20px; padding: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
     @media (max-width: 700px) { .claude-card { grid-template-columns: 1fr; padding: 32px 24px; } }
     .claude-card h2 { font-size: clamp(24px, 3vw, 36px); font-weight: 800; letter-spacing: -1px; margin-bottom: 14px; }
-    .claude-card h2 span {
-      background: linear-gradient(135deg, #2dd4e8, #7bf0fa);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .claude-card p { font-size: 15px; color: var(--muted); margin-bottom: 24px; }
-    .claude-codes { display: flex; flex-direction: column; gap: 16px; }
-    .code-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .claude-card h2 em { font-style: normal; background: linear-gradient(135deg, #2dd4e8, #7bf0fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .claude-card p { font-size: 15px; color: var(--muted); margin-bottom: 24px; line-height: 1.7; }
 
     /* ── HOTKEYS ─────────────────────────────────────────────── */
     .hotkeys-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-    .hotkey-row {
-      display: flex; align-items: center; gap: 14px;
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 10px; padding: 16px 20px;
-      transition: border-color .2s, transform .2s;
-    }
+    .hotkey-row { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; transition: border-color .2s, transform .2s; }
     .hotkey-row:hover { border-color: rgba(45,212,232,.3); transform: translateY(-2px); }
-    .hotkey-badge {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 7px; padding: 5px 12px;
-      font-family: "SF Mono", monospace; font-size: 11.5px;
-      color: var(--teal); white-space: nowrap; font-weight: 600;
-    }
+    .hotkey-badge { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 5px 12px; font-family: "SF Mono", monospace; font-size: 11.5px; color: var(--teal); white-space: nowrap; font-weight: 600; }
     .hotkey-desc { font-size: 13px; color: var(--muted); }
 
+    /* ── CTA ─────────────────────────────────────────────────── */
+    .cta-band { position: relative; z-index: 1; text-align: center; padding: 96px 24px; border-top: 1px solid var(--border); }
+    .cta-band h2 { font-size: clamp(28px, 4vw, 48px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 14px; }
+    .cta-band h2 em { font-style: normal; background: linear-gradient(135deg, #2dd4e8, #7bf0fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .cta-band p { font-size: 16px; color: var(--muted); margin-bottom: 36px; }
+    .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .cta-note { margin-top: 16px; font-size: 12px; color: var(--muted); }
+
     /* ── FOOTER ──────────────────────────────────────────────── */
-    footer {
-      position: relative; z-index: 1;
-      border-top: 1px solid var(--border);
-      padding: 40px;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 16px;
-    }
+    footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 36px 40px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
     .footer-brand { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--text); text-decoration: none; }
     .footer-brand img { width: 24px; height: 24px; border-radius: 5px; }
     .footer-right { font-size: 13px; color: var(--muted); }
@@ -376,125 +217,136 @@
     <img src="human_typer_icon.png" alt="Human Typer" />
     Human Typer
   </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#claude">Claude</a>
+  </div>
   <a class="nav-download" href="https://github.com/The-Bean-Beater/human-typer" target="_blank">Download ↓</a>
 </nav>
 
-<!-- ── HERO ─────────────────────────────────────────────────────────── -->
-<div class="hero">
-  <img class="hero-logo" src="human_typer_icon.png" alt="Human Typer Logo" />
-  <h1>Type Like a <span>Human.</span></h1>
-  <p class="hero-sub">
-    A macOS auto-typer that makes your text look naturally typed —
-    real mistakes, hesitations, fatigue, and rhythm. Not a bot. A human.
-  </p>
-  <div class="hero-btns">
-    <a class="btn-primary" href="https://github.com/The-Bean-Beater/human-typer" target="_blank">Download Free</a>
-    <a class="btn-secondary" href="https://github.com/The-Bean-Beater/human-typer" target="_blank">View on GitHub →</a>
-  </div>
-  <p class="hero-note">macOS only &nbsp;·&nbsp; Python 3.9+ &nbsp;·&nbsp; Free &amp; open source</p>
-
-  <!-- Live typing demo -->
-  <div class="demo-window reveal">
-    <div class="demo-titlebar">
-      <div class="demo-dot red"></div>
-      <div class="demo-dot yellow"></div>
-      <div class="demo-dot green"></div>
-      <span class="demo-title">Human Typer — live preview</span>
+<!-- ── HERO (two-col: text left, demo right) ──────────────────────────── -->
+<div style="position:relative;z-index:1;overflow:hidden;">
+  <div class="hero-glow"></div>
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow">macOS · Free &amp; Open Source</div>
+      <h1>Type Like<br/>a <em>Human.</em></h1>
+      <p class="hero-sub">
+        An auto-typer that makes your text look naturally typed —
+        with real mistakes, hesitations, fatigue, and rhythm.
+        Not a bot. A human.
+      </p>
+      <div class="hero-btns">
+        <a class="btn-primary" href="https://github.com/The-Bean-Beater/human-typer" target="_blank">Download Free</a>
+        <a class="btn-secondary" href="https://github.com/The-Bean-Beater/human-typer" target="_blank">View on GitHub →</a>
+      </div>
+      <p class="hero-note">Python 3.9+ &nbsp;·&nbsp; pip install in seconds</p>
     </div>
-    <div class="demo-body" id="demo-text"><span class="demo-cursor"></span></div>
+
+    <!-- Live demo -->
+    <div class="demo-window">
+      <div class="demo-titlebar">
+        <div class="demo-dot red"></div>
+        <div class="demo-dot yellow"></div>
+        <div class="demo-dot green"></div>
+        <span class="demo-wintitle">Human Typer</span>
+      </div>
+      <div class="demo-meta">
+        <span class="demo-tag" id="demo-label">Essay</span>
+        <span class="demo-wpm" id="demo-wpm">42 WPM</span>
+      </div>
+      <div class="demo-body" id="demo-text"><span class="demo-cursor"></span></div>
+      <div class="demo-footer">
+        <div class="demo-progress-bar"><div class="demo-progress-fill" id="demo-prog"></div></div>
+        <span class="demo-status" id="demo-status">Typing...</span>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ── STATS BAR ─────────────────────────────────────────────────────── -->
+<!-- ── STATS ──────────────────────────────────────────────────────────── -->
 <div class="stats-bar">
-  <div class="stat-item">
-    <span class="stat-num" data-target="12">0</span>
-    <span class="stat-label">Humanization settings</span>
-  </div>
-  <div class="stat-item">
-    <span class="stat-num" data-target="3">0</span>
-    <span class="stat-label">Typo styles</span>
-  </div>
-  <div class="stat-item">
-    <span class="stat-num" data-target="999">0</span>
-    <span class="stat-label">Max WPM</span>
-  </div>
-  <div class="stat-item">
-    <span class="stat-num">∞</span>
-    <span class="stat-label">Free forever</span>
-  </div>
+  <div class="stat-item"><span class="stat-num" data-target="12">0</span><span class="stat-label">Humanization settings</span></div>
+  <div class="stat-item"><span class="stat-num" data-target="3">0</span><span class="stat-label">Typo styles</span></div>
+  <div class="stat-item"><span class="stat-num" data-target="999">0</span><span class="stat-label">Max WPM</span></div>
+  <div class="stat-item"><span class="stat-num">∞</span><span class="stat-label">Free forever</span></div>
 </div>
-
-<hr class="divider" />
 
 <!-- ── FEATURES ──────────────────────────────────────────────────────── -->
 <section id="features">
   <div class="reveal">
     <div class="section-tag">Features</div>
     <h2 class="section-title">Everything a human does.<br/>Nothing a bot does.</h2>
-    <p class="section-desc">Every setting is designed to mirror real human typing behavior.</p>
+    <p class="section-desc">Every setting is built to mirror real human typing behaviour — down to how your fingers slow at the edges of words.</p>
   </div>
-
   <div class="features-grid reveal-stagger">
-    <div class="feature-card">
-      <span class="feature-icon">⚡</span>
-      <h3>Adjustable WPM</h3>
-      <p>Set any words-per-minute speed. From a slow careful typist to a fast touch-typist — fully in your control.</p>
+    <div class="feature-card"><span class="feature-icon">⚡</span><h3>Adjustable WPM</h3><p>Set any words-per-minute speed. From a slow, careful typist to a fast touch-typist — fully in your control.</p></div>
+    <div class="feature-card"><span class="feature-icon">🎯</span><h3>Realistic Typos</h3><p>Three typo styles — random letters, adjacent keys on QWERTY, and transposed characters. Looks exactly like real mistakes.</p></div>
+    <div class="feature-card"><span class="feature-icon">⌨️</span><h3>Capitalization Errors</h3><p>Occasionally types a letter in the wrong case then self-corrects — like accidentally holding Shift a beat too long.</p></div>
+    <div class="feature-card"><span class="feature-icon">📉</span><h3>Fatigue Simulation</h3><p>Typing gradually slows down over the course of the text, like a real person getting tired as they go.</p></div>
+    <div class="feature-card"><span class="feature-icon">🌊</span><h3>Word Acceleration</h3><p>Slightly slower at the start and end of each word, fastest mid-word — matches the natural rhythm of real fingers.</p></div>
+    <div class="feature-card"><span class="feature-icon">⏸️</span><h3>Human Breaks</h3><p>Randomly pauses mid-text like someone reading ahead, and always hesitates after sentences and punctuation.</p></div>
+    <div class="feature-card"><span class="feature-icon">🧩</span><h3>Chunk Mode</h3><p>Pauses every few words and waits for a hotkey to continue — perfect for copying text piece by piece.</p></div>
+    <div class="feature-card"><span class="feature-icon">🔄</span><h3>Loop / Repeat</h3><p>Type the same text multiple times with a customizable delay between each run. Set it and walk away.</p></div>
+    <div class="feature-card"><span class="feature-icon">🪟</span><h3>Background Mode</h3><p>Types into any window — even when the app isn't focused. Lock onto your target window and switch freely.</p></div>
+    <div class="feature-card"><span class="feature-icon">🎛️</span><h3>Presets</h3><p>Save your favourite settings as named presets and switch between them instantly. Never reconfigure from scratch.</p></div>
+    <div class="feature-card"><span class="feature-icon">📂</span><h3>Load from File</h3><p>Import any .txt file directly into the app. Perfect for long documents, scripts, or essays.</p></div>
+    <div class="feature-card"><span class="feature-icon">🤖</span><h3>Claude Code Integration</h3><p>Send text straight from Claude Code with one curl command. AI writes it, Human Typer types it.</p></div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── HOW IT WORKS + HOTKEYS ─────────────────────────────────────────── -->
+<section id="how-it-works">
+  <div class="reveal">
+    <div class="section-tag">Getting Started</div>
+    <h2 class="section-title">Up and running<br/>in three steps.</h2>
+  </div>
+  <div class="how-grid reveal">
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <div>
+          <h4>Clone &amp; install</h4>
+          <p>Clone the repo and install the dependencies with pip.</p>
+          <div style="margin-top:10px" class="code-wrap">
+            <div class="code-block" id="cb1">git clone https://github.com/The-Bean-Beater/human-typer.git
+cd human-typer
+pip install -r requirements.txt</div>
+            <button class="copy-btn" onclick="copyCode('cb1',this)">Copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <div>
+          <h4>Run the app</h4>
+          <p>Launch Human Typer from your terminal.</p>
+          <div style="margin-top:10px" class="code-wrap">
+            <div class="code-block" id="cb2">python3 human_typer.py</div>
+            <button class="copy-btn" onclick="copyCode('cb2',this)">Copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <div>
+          <h4>Paste, configure, type</h4>
+          <p>Drop in your text, dial in your settings, click Start — or use a hotkey.</p>
+        </div>
+      </div>
     </div>
-    <div class="feature-card">
-      <span class="feature-icon">🎯</span>
-      <h3>Realistic Typos</h3>
-      <p>Three typo styles — random letters, adjacent keys on QWERTY, and transposed characters. Looks exactly like real mistakes.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">⌨️</span>
-      <h3>Capitalization Errors</h3>
-      <p>Occasionally types a letter in the wrong case then self-corrects — like accidentally holding Shift a beat too long.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">📉</span>
-      <h3>Fatigue Simulation</h3>
-      <p>Typing gradually slows down over the course of the text, like a real person getting tired as they go.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🌊</span>
-      <h3>Word Acceleration</h3>
-      <p>Slightly slower at the start and end of each word, fastest mid-word — matches the natural rhythm of real fingers.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">⏸️</span>
-      <h3>Human Breaks</h3>
-      <p>Randomly pauses mid-text like someone reading ahead, and always hesitates after sentences and punctuation.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🧩</span>
-      <h3>Chunk Mode</h3>
-      <p>Pauses every few words and waits for you to press a hotkey to continue — perfect for copying text piece by piece.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🔄</span>
-      <h3>Loop / Repeat</h3>
-      <p>Type the same text multiple times with a customizable delay between each run. Set it and walk away.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🪟</span>
-      <h3>Background Mode</h3>
-      <p>Types into any window — even when the app isn't focused. Lock onto your target window and switch freely.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🎛️</span>
-      <h3>Presets</h3>
-      <p>Save your favorite settings as named presets and switch between them instantly. Never reconfigure from scratch.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">📂</span>
-      <h3>Load from File</h3>
-      <p>Import any .txt file directly into the app. Perfect for long documents, scripts, or essays.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🤖</span>
-      <h3>Claude Code Integration</h3>
-      <p>Send text directly from Claude Code with a single curl command. Let AI generate content and Human Typer type it out.</p>
+
+    <div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:20px;letter-spacing:-.3px;">Global Hotkeys</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">Work even when the app is hidden in the background.</p>
+      <div class="hotkeys-grid" style="grid-template-columns:1fr;">
+        <div class="hotkey-row"><span class="hotkey-badge">Ctrl + Opt + H</span><span class="hotkey-desc">Start typing</span></div>
+        <div class="hotkey-row"><span class="hotkey-badge">Ctrl + Opt + S</span><span class="hotkey-desc">Stop typing</span></div>
+        <div class="hotkey-row"><span class="hotkey-badge">Ctrl + Opt + Space</span><span class="hotkey-desc">Resume chunk</span></div>
+      </div>
     </div>
   </div>
 </section>
@@ -506,103 +358,41 @@
   <div class="claude-card reveal">
     <div>
       <div class="section-tag">AI Integration</div>
-      <h2>Built for <span>Claude Code.</span></h2>
-      <p>Ask Claude to generate anything — an email, an essay, a message — then send it straight to Human Typer with one command. It fills the box and starts typing automatically.</p>
+      <h2>Built for <em>Claude Code.</em></h2>
+      <p>Ask Claude to generate anything — an email, an essay, a cover letter — then send it straight to Human Typer with one command. It fills the box and starts typing automatically. No copy-paste needed.</p>
       <a class="btn-primary" href="https://github.com/The-Bean-Beater/human-typer" target="_blank">Get Started</a>
     </div>
-    <div class="claude-codes">
+    <div class="code-stack">
       <div>
         <div class="code-label">Fill the text box</div>
         <div class="code-wrap">
-          <div class="code-block" id="cb1">curl -X POST http://localhost:7799/type \
+          <div class="code-block" id="cb3">curl -X POST http://localhost:7799/type \
   -d "your text here"</div>
-          <button class="copy-btn" onclick="copyCode('cb1',this)">Copy</button>
-        </div>
-      </div>
-      <div>
-        <div class="code-label">Fill + start typing instantly</div>
-        <div class="code-wrap">
-          <div class="code-block" id="cb2">curl -X POST http://localhost:7799/type-and-start \
-  -d "your text here"</div>
-          <button class="copy-btn" onclick="copyCode('cb2',this)">Copy</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="divider" />
-
-<!-- ── INSTALL ───────────────────────────────────────────────────────── -->
-<section id="install">
-  <div class="reveal">
-    <div class="section-tag">Installation</div>
-    <h2 class="section-title">Up and running<br/>in seconds.</h2>
-    <p class="section-desc">Three commands and you're good to go.</p>
-  </div>
-
-  <div class="install-steps reveal-stagger">
-    <div class="step">
-      <div class="step-num">1</div>
-      <div class="step-body">
-        <h4>Clone the repo</h4>
-        <div class="code-wrap">
-          <div class="code-block" id="cb3">git clone https://github.com/The-Bean-Beater/human-typer.git
-cd human-typer</div>
           <button class="copy-btn" onclick="copyCode('cb3',this)">Copy</button>
         </div>
       </div>
-    </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <div class="step-body">
-        <h4>Install dependencies</h4>
+      <div>
+        <div class="code-label">Fill + start typing immediately</div>
         <div class="code-wrap">
-          <div class="code-block" id="cb4">pip install -r requirements.txt</div>
+          <div class="code-block" id="cb4">curl -X POST http://localhost:7799/type-and-start \
+  -d "your text here"</div>
           <button class="copy-btn" onclick="copyCode('cb4',this)">Copy</button>
         </div>
       </div>
     </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <div class="step-body">
-        <h4>Run the app</h4>
-        <div class="code-wrap">
-          <div class="code-block" id="cb5">python3 human_typer.py</div>
-          <button class="copy-btn" onclick="copyCode('cb5',this)">Copy</button>
-        </div>
-      </div>
-    </div>
   </div>
 </section>
 
-<hr class="divider" />
-
-<!-- ── HOTKEYS ───────────────────────────────────────────────────────── -->
-<section id="hotkeys">
-  <div class="reveal">
-    <div class="section-tag">Hotkeys</div>
-    <h2 class="section-title">Hands-free control.</h2>
-    <p class="section-desc">Global hotkeys work even when the app is in the background.</p>
+<!-- ── CTA BAND ───────────────────────────────────────────────────────── -->
+<div class="cta-band reveal">
+  <h2>Ready to type like a <em>human?</em></h2>
+  <p>Free, open source, and built for macOS. No account needed.</p>
+  <div class="cta-btns">
+    <a class="btn-primary" href="https://github.com/The-Bean-Beater/human-typer" target="_blank">Download on GitHub</a>
+    <a class="btn-secondary" href="https://github.com/The-Bean-Beater/human-typer/issues" target="_blank">Report a Bug</a>
   </div>
-
-  <div class="hotkeys-grid reveal-stagger">
-    <div class="hotkey-row">
-      <span class="hotkey-badge">Ctrl + Opt + H</span>
-      <span class="hotkey-desc">Start typing</span>
-    </div>
-    <div class="hotkey-row">
-      <span class="hotkey-badge">Ctrl + Opt + S</span>
-      <span class="hotkey-desc">Stop typing</span>
-    </div>
-    <div class="hotkey-row">
-      <span class="hotkey-badge">Ctrl + Opt + Space</span>
-      <span class="hotkey-desc">Resume chunk</span>
-    </div>
-  </div>
-</section>
-
-<hr class="divider" />
+  <p class="cta-note">Found a bug or have a feature request? Open an issue — all feedback is welcome.</p>
+</div>
 
 <!-- ── FOOTER ────────────────────────────────────────────────────────── -->
 <footer>
@@ -618,116 +408,116 @@ cd human-typer</div>
 </footer>
 
 <script>
-// ── Live typing demo ─────────────────────────────────────────────────
-const DEMO_PHRASES = [
-  "Penguins absolutely mog flamingos in every way...",
-  "Dear hiring manager, I am writing to express...",
-  "The quick brown fox jumps over the lazy dog.",
-  "Hey, just wanted to follow up on that email I sent—",
+// ── Live typing demo ──────────────────────────────────────────────────
+const PHRASES = [
+  { label:"Essay", wpm:"38 WPM",  text:"Penguins absolutely mog flamingos in every conceivable way. While flamingos balance on one leg in lukewarm water, penguins are surviving Antarctica in a tuxedo." },
+  { label:"Email", wpm:"52 WPM",  text:"Hey Sarah, just wanted to follow up on the meeting notes from Thursday. Could you send those over when you get a chance? No rush, thanks!" },
+  { label:"Chat",  wpm:"65 WPM",  text:"lol wait did you seriously just eat the last slice?? I was literally saving that for after the gym 😭 you owe me big time" },
+  { label:"Code",  wpm:"44 WPM",  text:'def greet(name):\n    print(f"Hello, {name}!")\n\ngreet("world")' },
+  { label:"Note",  wpm:"41 WPM",  text:"Remember to pick up groceries on the way home — milk, eggs, that sourdough bread from the corner bakery, and maybe some good cheese." },
+  { label:"Cover Letter", wpm:"36 WPM", text:"I am writing to express my strong interest in the Software Engineer position. I believe my background in Python and macOS development makes me a great fit for your team." },
+  { label:"Tweet", wpm:"70 WPM",  text:"just shipped a feature at 2am and it worked first try. this never happens. documenting this moment for future me who will not believe it" },
+  { label:"Search", wpm:"80 WPM", text:"how to center a div in css without losing your mind" },
 ];
-const DEMO_TYPOS = { a:'s', e:'r', i:'u', o:'p', t:'y', n:'m', h:'j' };
 
-let demoPhrase = 0, demoIdx = 0, demoText = "";
-const demoEl = document.getElementById("demo-text");
+const ADJACENT = { a:'s',e:'r',i:'u',o:'p',t:'y',n:'m',h:'j',s:'a',r:'e',u:'i',p:'o',y:'t',m:'n',j:'h' };
+
+let pi = 0, ci = 0, typed = "";
+const demoEl  = document.getElementById("demo-text");
+const progEl  = document.getElementById("demo-prog");
+const wpmEl   = document.getElementById("demo-wpm");
+const labelEl = document.getElementById("demo-label");
+const statEl  = document.getElementById("demo-status");
+
+function render() {
+  demoEl.innerHTML = escHtml(typed) + '<span class="demo-cursor"></span>';
+  const pct = (ci / PHRASES[pi].text.length) * 100;
+  progEl.style.width = pct + "%";
+}
 
 function demoStep() {
-  const phrase = DEMO_PHRASES[demoPhrase];
-  if (demoIdx < phrase.length) {
-    const ch = phrase[demoIdx];
-    const shouldTypo = ch.toLowerCase() in DEMO_TYPOS && Math.random() < 0.1;
+  const p = PHRASES[pi];
+  if (ci < p.text.length) {
+    const ch = p.text[ci];
+    const lower = ch.toLowerCase();
+    const shouldTypo = lower in ADJACENT && ch !== '\n' && Math.random() < 0.09;
     if (shouldTypo) {
-      const wrong = DEMO_TYPOS[ch.toLowerCase()];
-      demoText += wrong;
+      typed += ADJACENT[lower];
       render();
       setTimeout(() => {
-        demoText = demoText.slice(0, -1);
-        render();
-        setTimeout(() => {
-          demoText += ch;
-          demoIdx++;
-          render();
-          setTimeout(demoStep, randDelay());
-        }, 80);
-      }, 120);
+        typed = typed.slice(0, -1); render();
+        setTimeout(() => { typed += ch; ci++; render(); setTimeout(demoStep, randDelay()); }, 75);
+      }, 110 + Math.random() * 80);
       return;
     }
-    demoText += ch;
-    demoIdx++;
+    typed += ch; ci++;
     render();
-    setTimeout(demoStep, randDelay());
+    const delay = ch === '\n' ? 280 : ch === ' ' ? randDelay() * 1.3 : randDelay();
+    setTimeout(demoStep, delay);
   } else {
-    // pause then clear and next phrase
-    setTimeout(() => {
-      clearDemo();
-    }, 2200);
+    statEl.textContent = "Done.";
+    setTimeout(clearDemo, 2400);
   }
 }
 
-function render() {
-  demoEl.innerHTML = escHtml(demoText) + '<span class="demo-cursor"></span>';
-}
-
 function clearDemo() {
-  let i = demoText.length;
+  statEl.textContent = "Typing...";
+  let len = typed.length;
   const del = setInterval(() => {
-    demoText = demoText.slice(0, --i);
+    len -= 2;
+    typed = typed.slice(0, len);
     render();
-    if (i <= 0) {
+    if (len <= 0) {
       clearInterval(del);
-      demoPhrase = (demoPhrase + 1) % DEMO_PHRASES.length;
-      demoIdx = 0;
-      setTimeout(demoStep, 400);
+      typed = ""; ci = 0;
+      pi = (pi + 1) % PHRASES.length;
+      wpmEl.textContent  = PHRASES[pi].wpm;
+      labelEl.textContent = PHRASES[pi].label;
+      progEl.style.width = "0%";
+      render();
+      setTimeout(demoStep, 500);
     }
-  }, 18);
+  }, 12);
 }
 
-function randDelay() { return 40 + Math.random() * 70; }
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function randDelay() { return 35 + Math.random() * 75; }
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br/>'); }
 
-setTimeout(demoStep, 1200);
+wpmEl.textContent   = PHRASES[0].wpm;
+labelEl.textContent = PHRASES[0].label;
+setTimeout(demoStep, 1000);
 
 // ── Scroll reveal ─────────────────────────────────────────────────────
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.classList.add("visible");
-      observer.unobserve(e.target);
-    }
-  });
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("visible"); obs.unobserve(e.target); } });
 }, { threshold: 0.12 });
+document.querySelectorAll(".reveal, .reveal-stagger").forEach(el => obs.observe(el));
 
-document.querySelectorAll(".reveal, .reveal-stagger").forEach(el => observer.observe(el));
-
-// ── Animated stat counters ────────────────────────────────────────────
-const statObserver = new IntersectionObserver((entries) => {
+// ── Stat counters ─────────────────────────────────────────────────────
+const sObs = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (!e.isIntersecting) return;
-    const el = e.target;
-    const target = parseInt(el.dataset.target);
+    const el = e.target, target = parseInt(el.dataset.target);
     if (isNaN(target)) return;
-    statObserver.unobserve(el);
+    sObs.unobserve(el);
     let start = 0;
-    const dur = 1200;
-    const step = (timestamp) => {
-      if (!start) start = timestamp;
-      const progress = Math.min((timestamp - start) / dur, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      el.textContent = Math.floor(eased * target);
-      if (progress < 1) requestAnimationFrame(step);
+    const step = ts => {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / 1200, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.floor(ease * target);
+      if (p < 1) requestAnimationFrame(step);
       else el.textContent = target + (target === 999 ? "+" : "");
     };
     requestAnimationFrame(step);
   });
 }, { threshold: 0.5 });
-
-document.querySelectorAll(".stat-num[data-target]").forEach(el => statObserver.observe(el));
+document.querySelectorAll(".stat-num[data-target]").forEach(el => sObs.observe(el));
 
 // ── Copy buttons ──────────────────────────────────────────────────────
 function copyCode(id, btn) {
-  const text = document.getElementById(id).innerText;
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = "Copied!";
-    btn.classList.add("copied");
+  navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => {
+    btn.textContent = "Copied!"; btn.classList.add("copied");
     setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1800);
   });
 }
