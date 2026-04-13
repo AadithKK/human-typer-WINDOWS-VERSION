@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Human Typer — Type Like a Human</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #141414;
+      --surface:  #1e1e1e;
+      --card:     #242424;
+      --border:   #2e2e2e;
+      --teal:     #2dd4e8;
+      --teal-dim: rgba(45,212,232,0.12);
+      --teal-glow:rgba(45,212,232,0.25);
+      --text:     #e8e8e8;
+      --muted:    #777;
+      --radius:   14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise overlay ─────────────────────────────────────── */
+    body::before {
+      content: "";
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: .4;
+    }
+
+    /* ── NAV ─────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; height: 64px;
+      background: rgba(20,20,20,0.75);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: var(--text);
+      font-size: 17px; font-weight: 600; letter-spacing: -.3px;
+    }
+
+    .nav-brand img { width: 30px; height: 30px; border-radius: 7px; }
+
+    .nav-download {
+      background: var(--teal); color: #0b1a1f;
+      text-decoration: none; font-size: 13px; font-weight: 700;
+      padding: 8px 20px; border-radius: 8px;
+      transition: opacity .2s, box-shadow .2s;
+    }
+    .nav-download:hover {
+      opacity: .88;
+      box-shadow: 0 0 18px var(--teal-glow);
+    }
+
+    /* ── HERO ────────────────────────────────────────────────── */
+    .hero {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      overflow: hidden;
+    }
+
+    /* animated radial glow */
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(45,212,232,.13) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -60%);
+      animation: pulse 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes pulse {
+      0%,100% { transform: translate(-50%,-60%) scale(1); opacity: 1; }
+      50%      { transform: translate(-50%,-60%) scale(1.12); opacity: .7; }
+    }
+
+    .hero-logo {
+      width: 88px; height: 88px; border-radius: 20px;
+      margin-bottom: 32px;
+      box-shadow: 0 0 0 1px var(--border), 0 0 40px var(--teal-dim);
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+
+    .hero h1 {
+      font-size: clamp(42px, 7vw, 80px);
+      font-weight: 800; letter-spacing: -2px; line-height: 1.05;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, #2dd4e8, #7bf0fa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--muted); max-width: 560px;
+      margin-bottom: 40px; line-height: 1.7;
+    }
+
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+    .btn-primary {
+      background: var(--teal); color: #0b1a1f;
+      text-decoration: none; font-size: 15px; font-weight: 700;
+      padding: 14px 32px; border-radius: 10px;
+      transition: opacity .2s, box-shadow .2s, transform .2s;
+      box-shadow: 0 4px 24px var(--teal-glow);
+    }
+    .btn-primary:hover {
+      opacity: .88; transform: translateY(-2px);
+      box-shadow: 0 8px 32px var(--teal-glow);
+    }
+
+    .btn-secondary {
+      background: transparent; color: var(--text);
+      text-decoration: none; font-size: 15px; font-weight: 600;
+      padding: 14px 32px; border-radius: 10px;
+      border: 1px solid var(--border);
+      transition: border-color .2s, background .2s, transform .2s;
+    }
+    .btn-secondary:hover {
+      border-color: var(--teal); background: var(--teal-dim);
+      transform: translateY(-2px);
+    }
+
+    .hero-note {
+      margin-top: 20px; font-size: 12px; color: var(--muted);
+    }
+
+    /* ── SECTION WRAPPER ─────────────────────────────────────── */
+    section {
+      position: relative; z-index: 1;
+      padding: 96px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-tag {
+      display: inline-block;
+      font-size: 11px; font-weight: 700; letter-spacing: 1.4px;
+      text-transform: uppercase; color: var(--teal);
+      background: var(--teal-dim); border: 1px solid rgba(45,212,232,.2);
+      padding: 4px 12px; border-radius: 99px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 800; letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    .section-desc {
+      font-size: 16px; color: var(--muted);
+      max-width: 520px; margin-bottom: 56px;
+    }
+
+    /* ── FEATURES GRID ───────────────────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: border-color .25s, transform .25s, box-shadow .25s;
+    }
+    .feature-card:hover {
+      border-color: rgba(45,212,232,.35);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(0,0,0,.35);
+    }
+
+    .feature-icon {
+      font-size: 28px; margin-bottom: 14px;
+      display: block;
+    }
+
+    .feature-card h3 {
+      font-size: 16px; font-weight: 700;
+      margin-bottom: 8px; color: var(--text);
+    }
+
+    .feature-card p {
+      font-size: 13.5px; color: var(--muted); line-height: 1.65;
+    }
+
+    /* ── DIVIDER ─────────────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 24px;
+    }
+
+    /* ── INSTALL ─────────────────────────────────────────────── */
+    .install-steps {
+      display: flex; flex-direction: column; gap: 16px;
+      max-width: 640px;
+    }
+
+    .step {
+      display: flex; gap: 18px; align-items: flex-start;
+    }
+
+    .step-num {
+      min-width: 32px; height: 32px;
+      background: var(--teal-dim); border: 1px solid rgba(45,212,232,.3);
+      color: var(--teal); font-size: 13px; font-weight: 700;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 2px;
+    }
+
+    .step-body h4 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+    .step-body p  { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+
+    .code-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-family: "SF Mono", "Fira Code", "Courier New", monospace;
+      font-size: 13px; color: #c8eaf0;
+      position: relative;
+      overflow-x: auto;
+    }
+
+    .code-block .comment { color: var(--muted); }
+
+    /* ── CLAUDE SECTION ──────────────────────────────────────── */
+    .claude-card {
+      background: linear-gradient(135deg, var(--card) 0%, #1a2a2c 100%);
+      border: 1px solid rgba(45,212,232,.2);
+      border-radius: 20px;
+      padding: 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    @media (max-width: 700px) {
+      .claude-card { grid-template-columns: 1fr; padding: 32px 24px; }
+    }
+
+    .claude-card h2 {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 800; letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .claude-card h2 span {
+      background: linear-gradient(135deg, #2dd4e8, #7bf0fa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .claude-card p { font-size: 15px; color: var(--muted); margin-bottom: 24px; }
+
+    .claude-codes { display: flex; flex-direction: column; gap: 12px; }
+
+    .code-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    /* ── HOTKEYS ─────────────────────────────────────────────── */
+    .hotkeys-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .hotkey-row {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 20px;
+    }
+
+    .hotkey-badge {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 7px; padding: 5px 12px;
+      font-family: "SF Mono", monospace; font-size: 11.5px;
+      color: var(--teal); white-space: nowrap; font-weight: 600;
+    }
+
+    .hotkey-desc { font-size: 13px; color: var(--muted); }
+
+    /* ── FOOTER ──────────────────────────────────────────────── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+
+    .footer-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; font-weight: 600; color: var(--text);
+      text-decoration: none;
+    }
+    .footer-brand img { width: 24px; height: 24px; border-radius: 5px; }
+
+    .footer-right { font-size: 13px; color: var(--muted); }
+    .footer-right a { color: var(--teal); text-decoration: none; }
+    .footer-right a:hover { text-decoration: underline; }
+
+    /* ── SCROLLBAR ───────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────────── -->
+<nav>
+  <a class="nav-brand" href="#">
+    <img src="human_typer_icon.png" alt="Human Typer" />
+    Human Typer
+  </a>
+  <a class="nav-download" href="https://github.com/The-Bean-Beater/human-typer" target="_blank">
+    Download ↓
+  </a>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────────────────────────── -->
+<div class="hero">
+  <img class="hero-logo" src="human_typer_icon.png" alt="Human Typer Logo" />
+  <h1>Type Like a <span>Human.</span></h1>
+  <p class="hero-sub">
+    A macOS auto-typer that makes your text look naturally typed —
+    real mistakes, hesitations, fatigue, and rhythm. Not a bot. A human.
+  </p>
+  <div class="hero-btns">
+    <a class="btn-primary" href="https://github.com/The-Bean-Beater/human-typer" target="_blank">
+      Download Free
+    </a>
+    <a class="btn-secondary" href="https://github.com/The-Bean-Beater/human-typer" target="_blank">
+      View on GitHub →
+    </a>
+  </div>
+  <p class="hero-note">macOS only &nbsp;·&nbsp; Python 3.9+ &nbsp;·&nbsp; Free &amp; open source</p>
+</div>
+
+<hr class="divider" />
+
+<!-- ── FEATURES ──────────────────────────────────────────────────────── -->
+<section id="features">
+  <div class="section-tag">Features</div>
+  <h2 class="section-title">Everything a human does.<br/>Nothing a bot does.</h2>
+  <p class="section-desc">Every setting is designed to mirror real human typing behavior.</p>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-icon">⚡</span>
+      <h3>Adjustable WPM</h3>
+      <p>Set any words-per-minute speed. From a slow careful typist to a fast touch-typist — fully in your control.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎯</span>
+      <h3>Realistic Typos</h3>
+      <p>Three typo styles — random letters, adjacent keys on QWERTY, and transposed characters. Looks exactly like real mistakes.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⌨️</span>
+      <h3>Capitalization Errors</h3>
+      <p>Occasionally types a letter in the wrong case then self-corrects — like accidentally holding Shift a beat too long.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📉</span>
+      <h3>Fatigue Simulation</h3>
+      <p>Typing gradually slows down over the course of the text, like a real person getting tired as they go.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🌊</span>
+      <h3>Word Acceleration</h3>
+      <p>Slightly slower at the start and end of each word, fastest mid-word — matches the natural rhythm of real fingers.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⏸️</span>
+      <h3>Human Breaks</h3>
+      <p>Randomly pauses mid-text like someone reading ahead, and always hesitates after sentences and punctuation.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🧩</span>
+      <h3>Chunk Mode</h3>
+      <p>Pauses every few words and waits for you to press a hotkey to continue — perfect for copying text piece by piece.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔄</span>
+      <h3>Loop / Repeat</h3>
+      <p>Type the same text multiple times with a customizable delay between each run. Set it and walk away.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🪟</span>
+      <h3>Background Mode</h3>
+      <p>Types into any window — even when the app isn't focused. Lock onto your target window and switch freely.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎛️</span>
+      <h3>Presets</h3>
+      <p>Save your favorite settings as named presets and switch between them instantly. Never reconfigure from scratch.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📂</span>
+      <h3>Load from File</h3>
+      <p>Import any .txt file directly into the app. Perfect for long documents, scripts, or essays.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🤖</span>
+      <h3>Claude Code Integration</h3>
+      <p>Send text directly from Claude Code with a single curl command. Let AI generate content and Human Typer type it out.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── CLAUDE INTEGRATION ────────────────────────────────────────────── -->
+<section id="claude">
+  <div class="claude-card">
+    <div>
+      <div class="section-tag">AI Integration</div>
+      <h2>Built for <span>Claude Code.</span></h2>
+      <p>
+        Ask Claude to generate anything — an email, an essay, a message — then send it straight
+        to Human Typer with one command. It fills the box and starts typing automatically.
+      </p>
+      <a class="btn-primary" href="https://github.com/The-Bean-Beater/human-typer" target="_blank">
+        Get Started
+      </a>
+    </div>
+    <div class="claude-codes">
+      <div>
+        <div class="code-label">Fill the text box</div>
+        <div class="code-block">curl -X POST http://localhost:7799/type \<br/>&nbsp;&nbsp;-d "your text here"</div>
+      </div>
+      <div>
+        <div class="code-label">Fill + start typing instantly</div>
+        <div class="code-block">curl -X POST http://localhost:7799/type-and-start \<br/>&nbsp;&nbsp;-d "your text here"</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── INSTALL ───────────────────────────────────────────────────────── -->
+<section id="install">
+  <div class="section-tag">Installation</div>
+  <h2 class="section-title">Up and running<br/>in seconds.</h2>
+  <p class="section-desc">Three commands and you're good to go.</p>
+
+  <div class="install-steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Clone the repo</h4>
+        <div class="code-block">git clone https://github.com/The-Bean-Beater/human-typer.git<br/>cd human-typer</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Install dependencies</h4>
+        <div class="code-block">pip install -r requirements.txt</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Run the app</h4>
+        <div class="code-block">python3 human_typer.py</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── HOTKEYS ───────────────────────────────────────────────────────── -->
+<section id="hotkeys">
+  <div class="section-tag">Hotkeys</div>
+  <h2 class="section-title">Hands-free control.</h2>
+  <p class="section-desc">Global hotkeys work even when the app is in the background.</p>
+
+  <div class="hotkeys-grid">
+    <div class="hotkey-row">
+      <span class="hotkey-badge">Ctrl + Opt + H</span>
+      <span class="hotkey-desc">Start typing</span>
+    </div>
+    <div class="hotkey-row">
+      <span class="hotkey-badge">Ctrl + Opt + S</span>
+      <span class="hotkey-desc">Stop typing</span>
+    </div>
+    <div class="hotkey-row">
+      <span class="hotkey-badge">Ctrl + Opt + Space</span>
+      <span class="hotkey-desc">Resume chunk</span>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── FOOTER ────────────────────────────────────────────────────────── -->
+<footer>
+  <a class="footer-brand" href="#">
+    <img src="human_typer_icon.png" alt="Human Typer" />
+    Human Typer
+  </a>
+  <div class="footer-right">
+    Open source &nbsp;·&nbsp;
+    <a href="https://github.com/The-Bean-Beater/human-typer" target="_blank">GitHub</a>
+    &nbsp;·&nbsp; macOS only &nbsp;·&nbsp; Free forever
+  </div>
+</footer>
+
+</body>
+</html>
