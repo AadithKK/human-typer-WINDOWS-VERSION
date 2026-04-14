@@ -1,6 +1,4 @@
 pyautogui
 customtkinter
 Pillow
-pynput
-pyobjc-framework-Quartz
-pyobjc-framework-Cocoa
+IDK WHAT ELSE
