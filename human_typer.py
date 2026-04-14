@@ -2,7 +2,6 @@ import pyautogui
 import time
 import random
 import re
-import subprocess
 import threading
 import math
 import os
@@ -13,17 +12,9 @@ import customtkinter as ctk
 from PIL import Image, ImageDraw
 from pynput import keyboard as pynput_keyboard
 
-from Quartz import (
-    CGEventCreateKeyboardEvent,
-    CGEventPostToPid,
-    CGEventKeyboardSetUnicodeString,
-)
-from AppKit import (
-    NSStatusBar, NSApplication, NSObject,
-    NSMenu, NSMenuItem, NSImage,
-    NSApplicationActivationPolicyRegular,
-    NSApplicationActivationPolicyAccessory,
-)
+# ── Windows-specific imports ───────────────────────────────────────────────────
+import ctypes
+import ctypes.wintypes
 
 # ── pyautogui ─────────────────────────────────────────────────────────────────
 pyautogui.PAUSE = 0
@@ -37,15 +28,13 @@ PRESETS_PATH = os.path.expanduser("~/.humantyper_presets.json")
 HISTORY_PATH = os.path.expanduser("~/.humantyper_history.json")
 MAX_HISTORY  = 10
 
-# ── Thread-safe queue for AppKit → tkinter calls ─────────────────────────────
+# ── Thread-safe queue for UI calls ───────────────────────────────────────────
 _ui_queue = _queue_mod.Queue()
 
 # ── Global state ──────────────────────────────────────────────────────────────
-stop_flag         = False
-chunk_waiting     = False
+stop_flag          = False
+chunk_waiting      = False
 chunk_resume_event = threading.Event()
-_KEY_CODES        = {'\n': 36, '\t': 48}
-_BACKSPACE        = 51
 
 # ── Local HTTP server (for Claude Code integration) ───────────────────────────
 HTTP_PORT    = 7799
@@ -143,31 +132,79 @@ def make_gear_icon(size=22, color=(160, 200, 220)):
     d.ellipse([cx - hole_r,  cy - hole_r,  cx + hole_r,  cy + hole_r],  fill=(0, 0, 0, 0))
     return img.resize((size, size), Image.LANCZOS)
 
-# ── Background typing helpers ─────────────────────────────────────────────────
-def get_frontmost_pid():
-    script = 'tell application "System Events" to get unix id of first process whose frontmost is true'
-    result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
-    try:
-        return int(result.stdout.strip())
-    except:
-        return None
+# ── Background typing helpers (Windows) ───────────────────────────────────────
+# Windows SendInput approach for background typing
+INPUT_KEYBOARD  = 1
+KEYEVENTF_UNICODE = 0x0004
+KEYEVENTF_KEYUP   = 0x0002
 
-def _post_key(pid, keycode, down):
-    CGEventPostToPid(pid, CGEventCreateKeyboardEvent(None, keycode, down))
+class KEYBDINPUT(ctypes.Structure):
+    _fields_ = [
+        ("wVk",         ctypes.wintypes.WORD),
+        ("wScan",       ctypes.wintypes.WORD),
+        ("dwFlags",     ctypes.wintypes.DWORD),
+        ("time",        ctypes.wintypes.DWORD),
+        ("dwExtraInfo", ctypes.POINTER(ctypes.c_ulong)),
+    ]
 
-def bg_type_char(char, pid):
-    if char in _KEY_CODES:
-        _post_key(pid, _KEY_CODES[char], True)
-        _post_key(pid, _KEY_CODES[char], False)
+class INPUT_union(ctypes.Union):
+    _fields_ = [("ki", KEYBDINPUT)]
+
+class INPUT(ctypes.Structure):
+    _fields_ = [("type", ctypes.wintypes.DWORD), ("ii", INPUT_union)]
+
+def _send_unicode_char(char, key_up=False):
+    """Send a unicode character via SendInput."""
+    flags = KEYEVENTF_UNICODE | (KEYEVENTF_KEYUP if key_up else 0)
+    extra = ctypes.pointer(ctypes.c_ulong(0))
+    inp = INPUT(
+        type=INPUT_KEYBOARD,
+        ii=INPUT_union(ki=KEYBDINPUT(
+            wVk=0,
+            wScan=ord(char),
+            dwFlags=flags,
+            time=0,
+            dwExtraInfo=extra,
+        ))
+    )
+    ctypes.windll.user32.SendInput(1, ctypes.byref(inp), ctypes.sizeof(inp))
+
+VK_BACK   = 0x08
+VK_RETURN = 0x0D
+VK_TAB    = 0x09
+
+def _send_vk(vk, key_up=False):
+    """Send a virtual key code via SendInput."""
+    flags = KEYEVENTF_KEYUP if key_up else 0
+    extra = ctypes.pointer(ctypes.c_ulong(0))
+    inp = INPUT(
+        type=INPUT_KEYBOARD,
+        ii=INPUT_union(ki=KEYBDINPUT(
+            wVk=vk,
+            wScan=0,
+            dwFlags=flags,
+            time=0,
+            dwExtraInfo=extra,
+        ))
+    )
+    ctypes.windll.user32.SendInput(1, ctypes.byref(inp), ctypes.sizeof(inp))
+
+def bg_type_char(char, _pid=None):
+    """Type a character using Windows SendInput (works across windows)."""
+    if char == '\n':
+        _send_vk(VK_RETURN, False)
+        _send_vk(VK_RETURN, True)
+    elif char == '\t':
+        _send_vk(VK_TAB, False)
+        _send_vk(VK_TAB, True)
     else:
-        for down in (True, False):
-            e = CGEventCreateKeyboardEvent(None, 0, down)
-            CGEventKeyboardSetUnicodeString(e, len(char), char)
-            CGEventPostToPid(pid, e)
+        _send_unicode_char(char, False)
+        _send_unicode_char(char, True)
 
-def bg_backspace(pid):
-    _post_key(pid, _BACKSPACE, True)
-    _post_key(pid, _BACKSPACE, False)
+def bg_backspace(_pid=None):
+    """Send a backspace via SendInput."""
+    _send_vk(VK_BACK, False)
+    _send_vk(VK_BACK, True)
 
 # ── Typing helpers ────────────────────────────────────────────────────────────
 def punctuation_delay(char):
@@ -219,14 +256,14 @@ def do_typo(char, intensity, adjacent_only, background_mode, target_pid):
     double_thresh = wrong_thresh + double_weight / total
 
     def type_it(c):
-        if background_mode and target_pid:
-            bg_type_char(c, target_pid)
+        if background_mode:
+            bg_type_char(c)
         else:
             pyautogui.write(c)
 
     def backspace():
-        if background_mode and target_pid:
-            bg_backspace(target_pid)
+        if background_mode:
+            bg_backspace()
         else:
             pyautogui.press("backspace")
 
@@ -262,11 +299,9 @@ def type_text(text, wpm, typo_intensity, adjacent_only, cap_intensity, variance,
         status_cb(f"Starting in {i}s  —  click your target window...")
         time.sleep(1)
 
-    target_pid = get_frontmost_pid() if background_mode else None
-
     def type_it(c):
-        if background_mode and target_pid:
-            bg_type_char(c, target_pid)
+        if background_mode:
+            bg_type_char(c)
         else:
             pyautogui.write(c)
 
@@ -319,7 +354,7 @@ def type_text(text, wpm, typo_intensity, adjacent_only, cap_intensity, variance,
             if chunk_mode and is_real and chunk_count > 0 and chunk_count >= next_chunk_at:
                 chunk_waiting = True
                 chunk_resume_event.clear()
-                status_cb("Paused — press Ctrl+Opt+Space to continue...")
+                status_cb("Paused — press Ctrl+Alt+Space to continue...")
                 chunk_resume_event.wait()
                 chunk_waiting = False
                 if stop_flag:
@@ -344,10 +379,9 @@ def type_text(text, wpm, typo_intensity, adjacent_only, cap_intensity, variance,
                 fatigue_mult = 1.0 + fatigue_max * (chars_done / max(1, total_chars))
 
                 # Acceleration multiplier — slow at word edges, fast mid-word
-                # Maps 0 (start) → 1.15, 0.5 (middle) → 1.0, 1.0 (end) → 1.15
                 if acceleration and char.isalpha():
                     pos   = alpha_idx / max(1, word_len - 1) if word_len > 1 else 0.5
-                    accel = 1.0 + 0.15 * abs(pos * 2 - 1)  # parabola: slow-fast-slow
+                    accel = 1.0 + 0.15 * abs(pos * 2 - 1)
                     alpha_idx += 1
                 else:
                     accel = 1.0
@@ -360,14 +394,14 @@ def type_text(text, wpm, typo_intensity, adjacent_only, cap_intensity, variance,
                 made_typo = False
                 style     = None
                 if typo_intensity > 0 and random.random() < (0.5 * typo_intensity) and char.isalpha():
-                    style     = do_typo(char, typo_intensity, adjacent_only, background_mode, target_pid)
+                    style     = do_typo(char, typo_intensity, adjacent_only, background_mode, None)
                     made_typo = True
                     if style == "swap" and ci + 1 < len(chars) and chars[ci + 1].isalpha():
                         next_char = chars[ci + 1]
                         type_it(next_char); time.sleep(random.uniform(0.05, 0.12))
                         type_it(char);      time.sleep(random.uniform(0.08, 0.18))
-                        if background_mode and target_pid:
-                            bg_backspace(target_pid); bg_backspace(target_pid)
+                        if background_mode:
+                            bg_backspace(); bg_backspace()
                         else:
                             pyautogui.press("backspace"); pyautogui.press("backspace")
                         time.sleep(0.08)
@@ -386,13 +420,13 @@ def type_text(text, wpm, typo_intensity, adjacent_only, cap_intensity, variance,
                 if not made_typo or style != "swap":
                     # Capitalization error — type wrong case then backspace-correct
                     if cap_intensity > 0 and char.isalpha() and not made_typo:
-                        cap_chance = 0.01 + (cap_intensity - 1) / 99 * 0.49  # 1% at 1, 50% at 100
+                        cap_chance = 0.01 + (cap_intensity - 1) / 99 * 0.49
                         if random.random() < cap_chance:
                             wrong_case = char.upper() if char.islower() else char.lower()
                             type_it(wrong_case)
                             time.sleep(random.uniform(0.06, 0.16))
-                            if background_mode and target_pid:
-                                bg_backspace(target_pid)
+                            if background_mode:
+                                bg_backspace()
                             else:
                                 pyautogui.press("backspace")
                             time.sleep(random.uniform(0.04, 0.10))
@@ -433,7 +467,6 @@ def load_history():
 
 def save_to_history(text):
     history = load_history()
-    # Remove duplicate if exists, then prepend
     history = [t for t in history if t != text]
     history.insert(0, text)
     history = history[:MAX_HISTORY]
@@ -477,86 +510,46 @@ app.geometry("700x700")
 app.resizable(False, False)
 app.configure(fg_color=APP_BG)
 
-# ── Menu bar status item ──────────────────────────────────────────────────────
-_status_item = None
+# ── Windows system tray (pystray) ─────────────────────────────────────────────
+_tray_icon   = None
+_tray_thread = None
+_pinned      = [False]
 
-_context_menu   = None  # right-click menu
-_pin_item       = None  # NSMenuItem for pin toggle
-_pinned         = [False]  # mutable so poller can update it
+def _build_tray():
+    """Build and run the Windows system tray icon."""
+    global _tray_icon
+    try:
+        import pystray
+        from PIL import Image as PilImage
 
-class _MenuDelegate(NSObject):
-    def handleClick_(self, sender):
-        event = NSApplication.sharedApplication().currentEvent()
-        # type 3 = right-mouse-down → show context menu
-        if event and event.type() == 3:
-            _status_item.popUpStatusItemMenu_(_context_menu)
+        if os.path.exists(LOGO_PATH):
+            tray_img = PilImage.open(LOGO_PATH).convert("RGBA").resize((32, 32))
         else:
+            # Draw a simple keyboard icon if logo is missing
+            tray_img = PilImage.new("RGBA", (32, 32), (26, 184, 204, 255))
+
+        def on_show(_icon, _item):
             _ui_queue.put("show")
 
-    def quitApp_(self, sender):
-        _ui_queue.put("quit")
+        def on_quit(_icon, _item):
+            _ui_queue.put("quit")
 
-    def togglePin_(self, sender):
-        _ui_queue.put("toggle_pin")
+        menu = pystray.Menu(
+            pystray.MenuItem("Open Human Typer", on_show, default=True),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem("Quit", on_quit),
+        )
+        _tray_icon = pystray.Icon("Human Typer", tray_img, "Human Typer", menu)
+        _tray_icon.run()
+    except ImportError:
+        pass  # pystray not installed — skip tray support
 
-_menu_delegate = _MenuDelegate.alloc().init()
+def _start_tray():
+    global _tray_thread
+    _tray_thread = threading.Thread(target=_build_tray, daemon=True)
+    _tray_thread.start()
 
-def _build_menu_bar():
-    global _status_item, _context_menu, _pin_item
-
-    _context_menu = NSMenu.alloc().init()
-    _context_menu.setAutoenablesItems_(False)
-
-    _pin_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
-        "Pin to Menu Bar", "togglePin:", "")
-    _pin_item.setTarget_(_menu_delegate)
-    _pin_item.setState_(0)
-    _context_menu.addItem_(_pin_item)
-
-    _context_menu.addItem_(NSMenuItem.separatorItem())
-
-    quit_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
-        "Quit Human Typer", "quitApp:", "")
-    quit_item.setTarget_(_menu_delegate)
-    _context_menu.addItem_(quit_item)
-
-    sb = NSStatusBar.systemStatusBar()
-    _status_item = sb.statusItemWithLength_(-1)
-    _status_item.setHighlightMode_(True)
-
-    btn = _status_item.button()
-    if os.path.exists(LOGO_PATH):
-        ns_img = NSImage.alloc().initWithContentsOfFile_(LOGO_PATH)
-        ns_img.setSize_((18, 18))
-        ns_img.setTemplate_(True)
-        btn.setImage_(ns_img)
-    else:
-        btn.setTitle_("⌨")
-
-    btn.setAction_("handleClick:")
-    btn.setTarget_(_menu_delegate)
-    btn.sendActionOn_(2 | 8)  # left + right mouse down
-
-def apply_window_mode(mode):
-    """mode: 'both' | 'dock' | 'menubar' | 'neither'"""
-    ns_app = NSApplication.sharedApplication()
-    global _status_item
-    show_menubar = mode in ("both", "menubar")
-    show_dock    = mode in ("both", "dock")
-
-    if show_menubar and _status_item is None:
-        _build_menu_bar()
-    elif not show_menubar and _status_item is not None:
-        NSStatusBar.systemStatusBar().removeStatusItem_(_status_item)
-        _status_item = None
-
-    if show_dock:
-        ns_app.setActivationPolicy_(NSApplicationActivationPolicyRegular)
-    else:
-        ns_app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
-
-# Default: show in both
-_build_menu_bar()
+_start_tray()
 
 _ico_home_active = ctk.CTkImage(make_grid_icon(22, TEAL_RGB),  size=(22, 22))
 _ico_home_idle   = ctk.CTkImage(make_grid_icon(22, MUTED_RGB), size=(22, 22))
@@ -594,7 +587,7 @@ page_header.pack(fill="x")
 page_header.pack_propagate(False)
 
 page_title_lbl = ctk.CTkLabel(page_header, text="Human Typer",
-                                font=ctk.CTkFont(family="SF Pro Display", size=22, weight="bold"),
+                                font=ctk.CTkFont(size=22, weight="bold"),
                                 text_color=HDR_TEXT)
 page_title_lbl.pack(side="left", padx=20)
 
@@ -652,7 +645,6 @@ scroll = ctk.CTkScrollableFrame(main_wrap, fg_color="transparent",
                                   corner_radius=0, scrollbar_button_color=CARD_BDR)
 scroll.grid(row=0, column=0, sticky="nsew", padx=16, pady=(10, 0))
 
-# ── helper: small description text under a control ───────────────────────────
 def desc_lbl(parent, text):
     ctk.CTkLabel(parent, text=text, font=ctk.CTkFont(size=11),
                  text_color=MUTED, anchor="w", wraplength=400,
@@ -726,7 +718,6 @@ section_lbl(scroll, "SPEED & ACCURACY")
 speed_card = card(scroll)
 speed_card.pack(fill="x", pady=(0, 4))
 
-# WPM + Typo side by side inside the card
 top_row = ctk.CTkFrame(speed_card, fg_color="transparent")
 top_row.pack(fill="x", padx=14, pady=(14, 4))
 
@@ -874,7 +865,7 @@ divider(flow_card)
 
 # Chunk mode
 chunk_var, chunk_sw = opt_row(flow_card, "Chunk Mode")
-desc_lbl(flow_card, "Pauses typing every few words and waits for Ctrl+Opt+Space to continue — like reading before you type each section.")
+desc_lbl(flow_card, "Pauses typing every few words and waits for Ctrl+Alt+Space to continue — like reading before you type each section.")
 
 # Chunk size sub-row
 chunk_sub = ctk.CTkFrame(flow_card, fg_color="transparent")
@@ -1074,31 +1065,6 @@ mode_menu = ctk.CTkOptionMenu(ar, values=["Dark", "Light", "System"],
 mode_menu.set("Dark")
 mode_menu.pack(side="right")
 
-ctk.CTkFrame(app_card, height=1, fg_color=CARD_BDR).pack(fill="x", padx=10)
-
-wr = ctk.CTkFrame(app_card, fg_color="transparent")
-wr.pack(fill="x", padx=16, pady=14)
-ctk.CTkLabel(wr, text="Window Visibility", font=ctk.CTkFont(size=13),
-             text_color=HDR_TEXT).pack(side="left")
-window_mode_menu = ctk.CTkOptionMenu(
-    wr,
-    values=["Dock + Menu Bar", "Dock Only", "Menu Bar Only", "Neither"],
-    fg_color=CARD_BG, button_color=TEAL, button_hover_color=TEAL_HOVER,
-    dropdown_fg_color=CARD_BG, width=150,
-    command=lambda v: apply_window_mode(
-        {"Dock + Menu Bar": "both", "Dock Only": "dock",
-         "Menu Bar Only": "menubar", "Neither": "neither"}[v]
-    )
-)
-window_mode_menu.set("Dock + Menu Bar")
-window_mode_menu.pack(side="right")
-ctk.CTkLabel(app_card,
-    text="  Menu Bar mode adds a ⌨ icon in the menu bar. "
-         "Use 'Neither' if you rely solely on global hotkeys.",
-    font=ctk.CTkFont(size=11), text_color=MUTED,
-    anchor="w", wraplength=400, justify="left"
-).pack(anchor="w", padx=16, pady=(0, 12))
-
 # ── Hotkeys info ──────────────────────────────────────────────────────────────
 section_lbl(settings_scroll, "GLOBAL HOTKEYS")
 hk_card = card(settings_scroll)
@@ -1108,14 +1074,14 @@ def hk_row(parent, key, desc):
     row = ctk.CTkFrame(parent, fg_color="transparent")
     row.pack(fill="x", padx=16, pady=6)
     ctk.CTkLabel(row, text=key, font=ctk.CTkFont(size=12, weight="bold"),
-                 text_color=TEAL, width=130, anchor="w").pack(side="left")
+                 text_color=TEAL, width=160, anchor="w").pack(side="left")
     ctk.CTkLabel(row, text=desc, font=ctk.CTkFont(size=12),
                  text_color=HDR_TEXT).pack(side="left")
 
 ctk.CTkFrame(hk_card, height=6, fg_color="transparent").pack()
-hk_row(hk_card, "Ctrl + Option + H", "Start typing")
-hk_row(hk_card, "Ctrl + Option + S", "Stop typing")
-hk_row(hk_card, "Ctrl + Option + Space", "Resume chunk (when paused)")
+hk_row(hk_card, "Ctrl + Alt + H", "Start typing")
+hk_row(hk_card, "Ctrl + Alt + S", "Stop typing")
+hk_row(hk_card, "Ctrl + Alt + Space", "Resume chunk (when paused)")
 ctk.CTkFrame(hk_card, height=6, fg_color="transparent").pack()
 
 # ── Presets ───────────────────────────────────────────────────────────────────
@@ -1153,7 +1119,9 @@ def apply_config(cfg):
     cap_slider.set(cfg.get("cap_intensity", 0))
     cap_val_lbl.configure(text="Off" if cfg.get("cap_intensity", 0) == 0 else f"~{max(1, round(int(cfg.get('cap_intensity', 0)) / 2))}%")
     variance_slider.set(cfg.get("variance", 20))
+    var_val_lbl.configure(text=f"{int(cfg.get('variance', 20))}%")
     fatigue_slider.set(cfg.get("fatigue", 0))
+    fat_val_lbl.configure(text=f"{int(cfg.get('fatigue', 0))}%")
     accel_var.set(cfg.get("acceleration", 0))
     countdown_var.set(cfg.get("countdown", 5))
     punct_var.set(cfg.get("punct", 0))
@@ -1308,9 +1276,9 @@ nav_home_btn.configure(command=lambda: show_page("main"))
 nav_gear_btn.configure(command=lambda: show_page("settings"))
 
 # ── Global hotkeys (pynput) ───────────────────────────────────────────────────
-# Ctrl + Option + H → Start
-# Ctrl + Option + S → Stop
-# Ctrl + Option + Space → Resume chunk
+# Ctrl + Alt + H → Start
+# Ctrl + Alt + S → Stop
+# Ctrl + Alt + Space → Resume chunk
 _pressed = set()
 
 _CTRL  = {pynput_keyboard.Key.ctrl, pynput_keyboard.Key.ctrl_l, pynput_keyboard.Key.ctrl_r}
@@ -1318,14 +1286,14 @@ _ALT   = {pynput_keyboard.Key.alt,  pynput_keyboard.Key.alt_l,  pynput_keyboard.
 _H_KEY = pynput_keyboard.KeyCode.from_char('h')
 _S_KEY = pynput_keyboard.KeyCode.from_char('s')
 
-def _ctrl_opt():
+def _ctrl_alt():
     return bool(_pressed & _CTRL) and bool(_pressed & _ALT)
 
 def on_key_press(key):
     global chunk_waiting
     _pressed.add(key)
 
-    if _ctrl_opt():
+    if _ctrl_alt():
         if key == _H_KEY:
             app.after(0, start_typing)
         elif key == _S_KEY:
@@ -1340,17 +1308,26 @@ hotkey_listener = pynput_keyboard.Listener(
     on_press=on_key_press, on_release=on_key_release, daemon=True)
 hotkey_listener.start()
 
+# ── Window management ─────────────────────────────────────────────────────────
 def _show_window():
     app.deiconify()
-    app.update()  # force full repaint before bringing window forward
     app.lift()
-    NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
+    app.focus_force()
 
 def _on_close():
     if _pinned[0]:
-        app.withdraw()  # hide but keep running — icon stays in menu bar
+        app.withdraw()  # hide but keep running — icon stays in system tray
     else:
-        app.quit()
+        _cleanup_and_quit()
+
+def _cleanup_and_quit():
+    global _tray_icon
+    if _tray_icon is not None:
+        try:
+            _tray_icon.stop()
+        except Exception:
+            pass
+    app.quit()
 
 def _poll_ui_queue():
     try:
@@ -1360,11 +1337,7 @@ def _poll_ui_queue():
                 _show_window()
             elif cmd == "quit":
                 _pinned[0] = False
-                app.quit()
-            elif cmd == "toggle_pin":
-                _pinned[0] = not _pinned[0]
-                if _pin_item:
-                    _pin_item.setState_(1 if _pinned[0] else 0)
+                _cleanup_and_quit()
     except _queue_mod.Empty:
         pass
     app.after(100, _poll_ui_queue)
