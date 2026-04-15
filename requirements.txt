@@ -1,4 +1,4 @@
 pyautogui
 customtkinter
 Pillow
-IDK WHAT ELSE
+pynput
